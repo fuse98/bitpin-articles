@@ -17,9 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from users.views import Login
+from articles.views import ArticlesListView, RatingView
 
 
 urlpatterns = [
     path('users/login', Login.as_view()),
+    path('articles/rate', RatingView.as_view()),
+    path('articles/', ArticlesListView.as_view()),
     path('admin/', admin.site.urls),
 ]
