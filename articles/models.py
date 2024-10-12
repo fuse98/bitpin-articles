@@ -2,13 +2,10 @@ from django.db import models
 from django.contrib.auth.models import User
 
 from articles.managers import RatingManager, ArticleManager
-from articles.constants import (
-    RatingScores,
-    RatingSpamStatus,
-    SPAM_RATE_COUNT_LIMIT,
-    SPAM_RATE_ZSCORE_BOUND,
-)
+from articles.constants import RatingScores, RatingSpamStatus
+from core.settings import config
 from core.utils import calculate_zscore
+
 
 class Article(models.Model):
     title = models.CharField(max_length=255)
@@ -23,12 +20,12 @@ class Article(models.Model):
 
     def score_is_out_of_normal_bound(self, score):
         # Ignore spam check when number of rates are low
-        if self.rating_count < SPAM_RATE_COUNT_LIMIT:
+        if self.rating_count < config.SPAM_RATE_COUNT_LIMIT:
             return False
 
         variance = self.rating_square_sum / self.rating_count
         zscore = calculate_zscore(self.rating_average, variance, score)
-        return zscore > SPAM_RATE_ZSCORE_BOUND or zscore < -1 * SPAM_RATE_ZSCORE_BOUND 
+        return zscore > config.SPAM_RATE_ZSCORE_BOUND or zscore < -1 * config.SPAM_RATE_ZSCORE_BOUND 
 
     def update_rating_info_with_rating(self, rating, old_score: int|None=None):
         if rating.spam_status != RatingSpamStatus.NOT_SPAM:

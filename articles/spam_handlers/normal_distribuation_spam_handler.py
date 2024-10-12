@@ -4,8 +4,8 @@ from django.db import transaction
 from articles.spam_handlers.base import BaseSpamRatingHandler
 from articles.models import Rating, Article
 from articles.constants import RatingSpamStatus
-from articles.constants import SPAM_RATE_PROB_DIFF_LIMIT
 from core.utils import calculate_normal_distribution_pdf
+from core.settings import config
 
 
 class NormalDistributionSpamRatingHandler(BaseSpamRatingHandler):
@@ -29,7 +29,7 @@ class NormalDistributionSpamRatingHandler(BaseSpamRatingHandler):
                 rating.score
             )
             prob_diff = real_probability_of_score - normal_pdf
-            if prob_diff > SPAM_RATE_PROB_DIFF_LIMIT:
+            if prob_diff > config.SPAM_RATE_PROB_DIFF_LIMIT:
                 spam_rating_ids.append(rating.id)
             else:
                 not_spam_rating_ids.append(rating.id)

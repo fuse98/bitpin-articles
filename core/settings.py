@@ -11,21 +11,51 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from pydantic_settings import BaseSettings
+from typing import List
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+class EnvironmentConfig(BaseSettings):
+    '''
+    A config class reading configs from environment.
+    complex files are parsed using json parser.
+    '''
+    # Djnago
+    ALLOWED_HOSTS: List[str]
+    CORS_ALLOWED_ORIGINS: List[str]
+    CSRF_TRUSTED_ORIGINS: List[str]
+    DEBUG: bool = False
+    SECRET_KEY: str = 'django-insecure-ev3hmn2k+!mu-hwgs_kp+*+kuwqjmt+=_=^825ag66sc7curb0'
+
+    # DB
+    DB_NAME: str
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_HOST: str
+    DB_PORT: str
+
+    # SPAM_DETECTOR
+    SPAM_RATE_COUNT_LIMIT: int
+    SPAM_RATE_ZSCORE_BOUND: float
+    SPAM_RATE_PROB_DIFF_LIMIT: float
+
+    # CELERY
+    CELERY_BROKER_REDIS: str
+
+config = EnvironmentConfig()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+SECRET_KEY = config.SECRET_KEY
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ev3hmn2k+!mu-hwgs_kp+*+kuwqjmt+=_=^825ag66sc7curb0'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config.DEBUG
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config.ALLOWED_HOSTS
+
+CORS_ALLOWED_ORIGINS = config.CORS_ALLOWED_ORIGINS
+CSRF_TRUSTED_ORIGINS = config.CSRF_TRUSTED_ORIGINS
 
 
 # Application definition
@@ -47,6 +77,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -165,4 +196,4 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Celery
-CELERY_BROKER_URL='redis://localhost:6380'
+CELERY_BROKER_URL = config.CELERY_BROKER_REDIS
