@@ -3,6 +3,7 @@ pydantic-settings==2.4.0
 django-cors-headers==4.4.0
 gunicorn==22.0.0
 djangorestframework==3.15.2
+psycopg2-binary==2.9.9
 
 # celery-redis
 celery==5.4.0
