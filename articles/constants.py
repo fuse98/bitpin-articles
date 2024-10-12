@@ -2,6 +2,7 @@ from django.db import models
 
 SPAM_RATE_COUNT_LIMIT = 100
 SPAM_RATE_ZSCORE_BOUND = 2
+SPAM_RATE_PROB_DIFF_LIMIT = 0.05
 
 
 class RatingScores(models.IntegerChoices):

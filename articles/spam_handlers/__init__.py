@@ -1,0 +1,1 @@
+from articles.spam_handlers.normal_distribuation_spam_handler import NormalDistributionSpamRatingHandler

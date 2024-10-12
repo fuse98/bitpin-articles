@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-from articles.managers import RatingManager
+from articles.managers import RatingManager, ArticleManager
 from articles.constants import (
     RatingScores,
     RatingSpamStatus,
@@ -18,6 +18,8 @@ class Article(models.Model):
     rating_count = models.BigIntegerField(default=0)
     rating_average = models.FloatField(default=0)
     rating_square_sum = models.BigIntegerField(default=0)
+
+    objects: ArticleManager = ArticleManager()
 
     def score_is_out_of_normal_bound(self, score):
         # Ignore spam check when number of rates are low
@@ -51,16 +53,16 @@ class Article(models.Model):
         self.rating_square_sum = new_sum_squares
         self.save()
 
-    def update_rating_info_with_new_score(self, score):
+    def update_rating_info_with_new_score(self, score_sum, new_ratings_count=1):
         old_count = models.F('rating_count')
         old_mean = models.F('rating_average')
         old_sum_squares = models.F('rating_square_sum')
 
-        new_count = old_count + 1
-        new_mean = (old_mean * old_count + score)/new_count
+        new_count = old_count + new_ratings_count
+        new_mean = (old_mean * old_count + score_sum)/new_count
 
-        d1 = score - old_mean
-        d2 = score - new_mean
+        d1 = score_sum - old_mean
+        d2 = score_sum - new_mean
         new_sum_squares = old_sum_squares + d1*d2
 
         self.rating_average = new_mean
@@ -84,11 +86,6 @@ class Rating(models.Model):
         unique_together = ('article', 'user',)
 
     def update_score(self, article: Article, new_score: int):
-        spam_status = self.spam_status
-        if article.score_is_out_of_normal_bound(new_score):
-            spam_status = RatingSpamStatus.PROBABLE_SPAM
-
-        self.spam_status = spam_status
         self.score = new_score
         self.save()
         return self
