@@ -9,6 +9,7 @@ from rest_framework import authentication, permissions
 from articles.serializers import ArticleForListSerializer, RatingSerializer
 from articles.models import Article, Rating
 from core.constants import APIMessages
+from core.settings import config
 
 
 class ArticlesListView(ListAPIView):
@@ -56,6 +57,7 @@ class RatingView(APIView):
                 user=request.user,
                 article=article,
                 score=score,
+                spam_detection_is_active=config.SPAM_DETECTION_IS_ACTIVE,
             )
             article.update_rating_info_with_rating(rating)
 

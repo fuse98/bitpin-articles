@@ -200,6 +200,10 @@ Environment variables should be set in json style so that pydantict can parse th
     * type: float
     * To confirm if an score is spam the real rate of its accurance is compared to the Normal Distribution PDF of that score for that article and if the difference is grater than this limit, the score is considered spam
 
+- **SPAM_DETECTION_IS_ACTIVE**:
+    * type: bool
+    * If SPAM_DETECTION_IS_ACTIVE is false then the spam detection is deactivated.
+
 
 ## Spam Detection
 
@@ -250,5 +254,3 @@ Now if this probability difference is greater than a limit(specified by **SPAM_R
 * Tuning parameters with real data.
 
 * Considering submission time of ratings as an statistical factor
-
-* Having an off swtich to avoid falsely detecting real campains of enthusiasm or dislike as spam attacks.

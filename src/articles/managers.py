@@ -41,9 +41,9 @@ class RatingManager(models.Manager):
     def get_probable_spam_ratings(self):
         return self.filter(spam_status=RatingSpamStatus.PROBABLE_SPAM).prefetch_related('article')
 
-    def create_rating(self, user, article, score: int):
+    def create_rating(self, user, article, score: int, spam_detection_is_active: bool):
         spam_status = RatingSpamStatus.NOT_SPAM
-        if article.score_is_out_of_normal_bound(score):
+        if spam_detection_is_active and article.score_is_out_of_normal_bound(score):
             spam_status = RatingSpamStatus.PROBABLE_SPAM
 
         return self.create(
