@@ -39,6 +39,7 @@ class EnvironmentConfig(BaseSettings):
     SPAM_RATE_ZSCORE_BOUND: float
     SPAM_RATE_PROB_DIFF_LIMIT: float
     SPAM_DETECTION_IS_ACTIVE: bool
+    SPAM_DETECTION_TASK_PERIOD_TIME: int
 
     # CELERY
     CELERY_BROKER_REDIS: str
