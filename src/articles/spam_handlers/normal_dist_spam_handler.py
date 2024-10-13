@@ -1,14 +1,18 @@
 from typing import List
+
 from django.db import transaction
 
-from articles.spam_handlers.base import BaseSpamRatingHandler
+from articles.spam_handlers.base import BaseProbableSpamHandler
 from articles.models import Rating, Article
 from articles.constants import RatingSpamStatus
 from core.utils import calculate_normal_distribution_pdf
 from core.settings import config
 
 
-class NormalDistributionSpamRatingHandler(BaseSpamRatingHandler):
+class NormalDistProbableSpamHandler(BaseProbableSpamHandler):
+
+    def __init__(self, decisive_prob_diff: float) -> None:
+        self.decisive_prob_diff = decisive_prob_diff
 
     def get_suspicouse_ratings(self):
         return Rating.objects.get_probable_spam_ratings()
@@ -25,11 +29,11 @@ class NormalDistributionSpamRatingHandler(BaseSpamRatingHandler):
             real_probability_of_score = score_count / article.rating_count
             normal_pdf = calculate_normal_distribution_pdf(
                 article.rating_average,
-                article.rating_square_sum / article.rating_count,
+                article.get_variance(),
                 rating.score
             )
             prob_diff = real_probability_of_score - normal_pdf
-            if prob_diff > config.SPAM_RATE_PROB_DIFF_LIMIT:
+            if prob_diff > self.decisive_prob_diff:
                 spam_rating_ids.append(rating.id)
             else:
                 not_spam_rating_ids.append(rating.id)
@@ -54,3 +58,8 @@ class NormalDistributionSpamRatingHandler(BaseSpamRatingHandler):
             spam_rating_ids,
             RatingSpamStatus.SPAM
         )
+
+
+normal_dist_probable_spam_handler = NormalDistProbableSpamHandler(
+    config.SPAM_RATE_PROB_DIFF_LIMIT
+)

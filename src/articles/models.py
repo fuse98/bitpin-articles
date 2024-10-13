@@ -18,20 +18,14 @@ class Article(models.Model):
 
     objects: ArticleManager = ArticleManager()
 
-    def score_is_out_of_normal_bound(self, score):
-        # Ignore spam check when number of rates are low
-        if self.rating_count < config.SPAM_RATE_COUNT_LIMIT:
-            return False
+    def get_variance(self) -> float:
+        return self.rating_square_sum / self.rating_count
 
-        variance = self.rating_square_sum / self.rating_count
-        zscore = calculate_zscore(self.rating_average, variance, score)
-        return zscore > config.SPAM_RATE_ZSCORE_BOUND or zscore < -1 * config.SPAM_RATE_ZSCORE_BOUND 
-
-    def update_rating_info_with_rating(self, rating, old_score: int|None=None):
+    def update_rating_info_with_rating(self, rating, old_score: int|None=None) -> None:
         if rating.spam_status != RatingSpamStatus.NOT_SPAM:
             return
         if old_score is None:
-            self.update_rating_info_with_new_score(rating.score)
+            self.update_rating_info_with_new_scores(rating.score, 1)
         else:
             self.update_rating_info_with_updated_score(rating.score, old_score)
 
@@ -50,7 +44,7 @@ class Article(models.Model):
         self.rating_square_sum = new_sum_squares
         self.save()
 
-    def update_rating_info_with_new_score(self, score_sum, new_ratings_count=1):
+    def update_rating_info_with_new_scores(self, score_sum: int, new_ratings_count: int) -> None:
         old_count = models.F('rating_count')
         old_mean = models.F('rating_average')
         old_sum_squares = models.F('rating_square_sum')

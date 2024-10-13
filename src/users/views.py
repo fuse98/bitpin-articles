@@ -1,10 +1,12 @@
 from django.contrib.auth import authenticate
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.views import APIView
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
-from rest_framework import status
 
+from core.constants import APIMessages
 from users.serializers import LoginRequestSerializer, UserCreateSerializer
 
 
@@ -12,18 +14,17 @@ class LoginView(APIView):
 
     def post(self, request: Request):
         serializer = LoginRequestSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response({'message': 'Must provide username and password'}, status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
 
         user = authenticate(
             username=serializer.validated_data.get('username'),
             password=serializer.validated_data.get('password'),
         )
         if user is None:
-            return Response({'message': 'Invalid credentials'}, status.HTTP_401_UNAUTHORIZED)
+            raise AuthenticationFailed('Invalid credentials')
 
         token, _ = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key})
+        return Response({'token': token.key}, status=status.HTTP_200_OK)
 
 
 class RegisterView(APIView):
@@ -33,7 +34,7 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             return Response({
-                "message": "User created successfully",
+                "message": APIMessages.USER_CREATED_SUCCESSFULLY,
                 "user": {
                     "username": user.username,
                     "email": user.email,

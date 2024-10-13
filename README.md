@@ -200,6 +200,12 @@ Environment variables should be set in json style so that pydantict can parse th
     * type: float
     * To confirm if an score is spam the real rate of its accurance is compared to the Normal Distribution PDF of that score for that article and if the difference is grater than this limit, the score is considered spam
 
+- **SPAM_DETECTION_IS_ACTIVE**:
+    * type: bool
+    * If SPAM_DETECTION_IS_ACTIVE is false then the spam detection is deactivated.
+- **SPAM_DETECTION_TASK_PERIOD_TIME**:
+    * type: int
+    * Defines intervals between periodic task of spam detection in minutes.
 
 ## Spam Detection
 
@@ -218,9 +224,9 @@ When a user submits a rating for an article, the normal distribution of the rati
 
 #### 2. Detect Real Spam from Probable Spams
 
-Periodically all probable spams are reevaluated to avoid false positives.
+Periodically(Interval time specified by **SPAM_DETECTION_TASK_PERIOD_TIME**) all probable spams are reevaluated to avoid false positives.
 
-In this step if a spammer campain is going on, many probable spams will be gathered and the actual probability of an out of bound rating will differ significantly with the PDF of the normal distribution of the article`s rating. 
+In this step if a spam campain is going on, many probable spams will be gathered and the **actual probability** of an out of bound rating will differ significantly with the normal PDF of that rating.
 
 For example, take a suspicouse rating of 0 for article1, what will happen to this rating is this:
 
@@ -250,5 +256,3 @@ Now if this probability difference is greater than a limit(specified by **SPAM_R
 * Tuning parameters with real data.
 
 * Considering submission time of ratings as an statistical factor
-
-* Having an off swtich to avoid falsely detecting real campains of enthusiasm or dislike as spam attacks.

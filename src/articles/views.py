@@ -1,3 +1,4 @@
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
@@ -6,7 +7,10 @@ from rest_framework.response import Response
 from rest_framework import authentication, permissions
 
 from articles.serializers import ArticleForListSerializer, RatingSerializer
+from articles.spam_detector import spam_detector
 from articles.models import Article, Rating
+from core.constants import APIMessages
+from core.settings import config
 
 
 class ArticlesListView(ListAPIView):
@@ -34,12 +38,11 @@ class RatingView(APIView):
 
     def post(self, request: Request):
         serializer = RatingSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response({'errors': serializer.errors}, 400)
+        serializer.is_valid(raise_exception=True)
 
         article: Article = serializer.validated_data.get('article')
-
         score = serializer.validated_data.get('score')
+
         existing_rating: Rating | None = Rating.objects.get_user_rating_on_article_or_none(
             user=request.user, article=article
         )
@@ -51,12 +54,22 @@ class RatingView(APIView):
                 old_score,
             )
         else:
-            rating = Rating.objects.create_rating(
+            spam_status = spam_detector.get_spam_status_for_score(
+                score=score,
+                rating_count=article.rating_count,
+                mean=article.rating_average,
+                variance=article.get_variance()
+            )
+            rating = Rating.objects.create(
                 user=request.user,
                 article=article,
                 score=score,
+                spam_status=spam_status,
             )
             article.update_rating_info_with_rating(rating)
 
         response_serializer = RatingSerializer(rating)
-        return Response(response_serializer.data)
+        return Response({
+                "message": APIMessages.RATING_CREATED_SUCCESSFULLY,
+                "rating": response_serializer.data
+            }, status.HTTP_200_OK)

@@ -14,7 +14,7 @@ class ArticleManager(models.Manager):
         article_ids = articles_rating_info.keys()
         articles = self.filter(id__in=article_ids)
         for article in articles:
-            article.update_rating_info_with_new_score(
+            article.update_rating_info_with_new_scores(
                 score_sum=articles_rating_info[article.id]['score_sum'],
                 ratings_count=articles_rating_info[article.id]['ratings_count']
             )
@@ -41,11 +41,8 @@ class RatingManager(models.Manager):
     def get_probable_spam_ratings(self):
         return self.filter(spam_status=RatingSpamStatus.PROBABLE_SPAM).prefetch_related('article')
 
-    def create_rating(self, user, article, score: int):
-        spam_status = RatingSpamStatus.NOT_SPAM
-        if article.score_is_out_of_normal_bound(score):
-            spam_status = RatingSpamStatus.PROBABLE_SPAM
-
+    def create_rating(self, user, article, score: int, spam_detection_is_active: bool):
+        
         return self.create(
             user=user,
             article=article,
