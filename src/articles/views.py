@@ -1,3 +1,4 @@
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
@@ -34,12 +35,11 @@ class RatingView(APIView):
 
     def post(self, request: Request):
         serializer = RatingSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response({'errors': serializer.errors}, 400)
+        serializer.is_valid(raise_exception=True)
 
         article: Article = serializer.validated_data.get('article')
-
         score = serializer.validated_data.get('score')
+
         existing_rating: Rating | None = Rating.objects.get_user_rating_on_article_or_none(
             user=request.user, article=article
         )
@@ -59,4 +59,4 @@ class RatingView(APIView):
             article.update_rating_info_with_rating(rating)
 
         response_serializer = RatingSerializer(rating)
-        return Response(response_serializer.data)
+        return Response(response_serializer.data, status.HTTP_200_OK)
