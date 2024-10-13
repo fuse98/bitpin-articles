@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class BaseSpamRatingHandler(abc.ABC):
+class BaseProbableSpamHandler(abc.ABC):
 
     def detect_real_spam_ratings(self, ratings):
         raise NotImplementedError()

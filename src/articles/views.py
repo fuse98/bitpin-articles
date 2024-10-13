@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework import authentication, permissions
 
 from articles.serializers import ArticleForListSerializer, RatingSerializer
+from articles.spam_detector import spam_detector
 from articles.models import Article, Rating
 from core.constants import APIMessages
 from core.settings import config
@@ -53,11 +54,17 @@ class RatingView(APIView):
                 old_score,
             )
         else:
-            rating = Rating.objects.create_rating(
+            spam_status = spam_detector.get_spam_status_for_score(
+                score=score,
+                rating_count=article.rating_count,
+                mean=article.rating_average,
+                variance=article.get_variance()
+            )
+            rating = Rating.objects.create(
                 user=request.user,
                 article=article,
                 score=score,
-                spam_detection_is_active=config.SPAM_DETECTION_IS_ACTIVE,
+                spam_status=spam_status,
             )
             article.update_rating_info_with_rating(rating)
 
