@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from core.constants import APIMessages
 from users.serializers import LoginRequestSerializer, UserCreateSerializer
 
 
@@ -33,7 +34,7 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             return Response({
-                "message": "User created successfully",
+                "message": APIMessages.USER_CREATED_SUCCESSFULLY,
                 "user": {
                     "username": user.username,
                     "email": user.email,

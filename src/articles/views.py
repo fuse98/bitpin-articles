@@ -8,6 +8,7 @@ from rest_framework import authentication, permissions
 
 from articles.serializers import ArticleForListSerializer, RatingSerializer
 from articles.models import Article, Rating
+from core.constants import APIMessages
 
 
 class ArticlesListView(ListAPIView):
@@ -59,4 +60,7 @@ class RatingView(APIView):
             article.update_rating_info_with_rating(rating)
 
         response_serializer = RatingSerializer(rating)
-        return Response(response_serializer.data, status.HTTP_200_OK)
+        return Response({
+                "message": APIMessages.RATING_CREATED_SUCCESSFULLY,
+                "rating": response_serializer.data
+            }, status.HTTP_200_OK)
