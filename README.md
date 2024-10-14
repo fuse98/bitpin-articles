@@ -250,6 +250,14 @@ For example, take a suspicouse rating of 0 for article1, what will happen to thi
 
 Now if this probability difference is greater than a limit(specified by **SPAM_RATE_PROB_DIFF_LIMIT**) then the rating is considered a sure spam and else it is considered a not spam and will affect the article`s rating.
 
+### Recommended Configuration
+This is only a recomendation and might not work well for you. Tuning config must be done according to real data and usage conditions. 
+```
+SPAM_RATE_COUNT_LIMIT = 100
+SPAM_RATE_ZSCORE_BOUND = 2
+SPAM_RATE_PROB_DIFF_LIMIT = 0.1
+SPAM_DETECTION_TASK_PERIOD_TIME = 15
+```
 ### Implementation Considrations
 
 * For the first step to work synchronously, info about the normal distribution of the ratings should be accessable low effort. So ratings average, count and sum of squared mean differnces are saved in article tables and updated accordingly.
