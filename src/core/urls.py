@@ -23,7 +23,7 @@ from articles.views import ArticlesListView, RatingView
 urlpatterns = [
     path('users/login', LoginView.as_view()),
     path('users/register', RegisterView.as_view()),
-    path('articles/rate', RatingView.as_view()),
-    path('articles/', ArticlesListView.as_view()),
+    path('articles/rate', RatingView.as_view(), name='create-rating'),
+    path('articles/', ArticlesListView.as_view(), name='articles-list'),
     path('admin/', admin.site.urls),
 ]
