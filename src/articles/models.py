@@ -1,10 +1,15 @@
+from typing import List
+
 from django.db import models
 from django.contrib.auth.models import User
 
 from articles.managers import RatingManager, ArticleManager
 from articles.constants import RatingScores, RatingSpamStatus
 from core.settings import config
-from core.utils import calculate_zscore
+from core.utils import (
+    calculate_new_normal_dist_info_with_data_update,
+    calculate_new_normal_dist_info_with_new_data_points
+)
 
 
 class Article(models.Model):
@@ -14,47 +19,43 @@ class Article(models.Model):
 
     rating_count = models.BigIntegerField(default=0)
     rating_average = models.FloatField(default=0)
-    rating_square_sum = models.BigIntegerField(default=0)
+    rating_square_sum = models.FloatField(default=0.0)
 
     objects: ArticleManager = ArticleManager()
 
     def get_variance(self) -> float:
+        if self.rating_count == 0:
+            return 0.0
+
         return self.rating_square_sum / self.rating_count
 
     def update_rating_info_with_rating(self, rating, old_score: int|None=None) -> None:
         if rating.spam_status != RatingSpamStatus.NOT_SPAM:
             return
         if old_score is None:
-            self.update_rating_info_with_new_scores(rating.score, 1)
+            self.update_rating_info_with_new_scores(new_scores=[rating.score])
         else:
             self.update_rating_info_with_updated_score(rating.score, old_score)
 
     def update_rating_info_with_updated_score(self, score, old_score):
-        count = models.F('rating_count')
-        old_mean = models.F('rating_average')
-        old_sum_squares = models.F('rating_square_sum')
-
-        new_mean = ((old_mean * count) + (score - old_score))/count
-
-        mean_change_effect = count * (new_mean - old_mean)**2
-        score_change_effect = (score - new_mean)**2 - (old_score - new_mean)**2
-        new_sum_squares = old_sum_squares + mean_change_effect + score_change_effect
-
+        new_mean, new_sum_squares =calculate_new_normal_dist_info_with_data_update(
+            models.F('rating_average'),
+            models.F('rating_square_sum'),
+            models.F('rating_count'),
+            score,
+            old_score,
+        )
         self.rating_average = new_mean
         self.rating_square_sum = new_sum_squares
         self.save()
 
-    def update_rating_info_with_new_scores(self, score_sum: int, new_ratings_count: int) -> None:
-        old_count = models.F('rating_count')
-        old_mean = models.F('rating_average')
-        old_sum_squares = models.F('rating_square_sum')
-
-        new_count = old_count + new_ratings_count
-        new_mean = (old_mean * old_count + score_sum)/new_count
-
-        d1 = score_sum - old_mean
-        d2 = score_sum - new_mean
-        new_sum_squares = old_sum_squares + d1*d2
+    def update_rating_info_with_new_scores(self, new_scores: List[int]) -> None:
+        new_mean, new_sum_squares, new_count = calculate_new_normal_dist_info_with_new_data_points(
+            models.F('rating_average'),
+            models.F('rating_square_sum'),
+            models.F('rating_count'),
+            new_scores
+        )
 
         self.rating_average = new_mean
         self.rating_count = new_count

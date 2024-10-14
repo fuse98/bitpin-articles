@@ -2,7 +2,6 @@ import logging
 from typing import List
 
 from django.db import models
-
 from articles.constants import RatingSpamStatus
 
 logger = logging.getLogger(__name__)
@@ -14,9 +13,9 @@ class ArticleManager(models.Manager):
         article_ids = articles_rating_info.keys()
         articles = self.filter(id__in=article_ids)
         for article in articles:
+            rating_scores = articles_rating_info.get(article.id, [])
             article.update_rating_info_with_new_scores(
-                score_sum=articles_rating_info[article.id]['score_sum'],
-                ratings_count=articles_rating_info[article.id]['ratings_count']
+                rating_scores
             )
 
     def get_ratings_score_count_for_article_ids(self, article_ids: List[int]) -> dict:
@@ -41,15 +40,6 @@ class RatingManager(models.Manager):
     def get_probable_spam_ratings(self):
         return self.filter(spam_status=RatingSpamStatus.PROBABLE_SPAM).prefetch_related('article')
 
-    def create_rating(self, user, article, score: int, spam_detection_is_active: bool):
-        
-        return self.create(
-            user=user,
-            article=article,
-            score=score,
-            spam_status=spam_status,
-        )
-
     def annotate_articles_with_user_rating(self, articles, user):
         article_ids = [a.id for a in articles]
         user_ratings = self.filter(
@@ -65,11 +55,15 @@ class RatingManager(models.Manager):
         return articles
 
     def get_rating_info_by_articles_for_rating_ids(self, rating_ids: List[int]) -> dict:
-        articles_rating_info = self.filter(id__in=rating_ids).values('article_id').annotate(
-            ratings_count=models.Count('id'),
-            score_sum=models.Sum('score')
-        )
-        return { i.pop('article_id'): i for i in articles_rating_info}
+        articles_rating_info = self.filter(id__in=rating_ids).values('article_id', 'score')
+        articles_rating_info_dict = {}
+        for d in articles_rating_info:
+            if d['article_id'] not in articles_rating_info_dict:
+                articles_rating_info_dict[d['article_id']] = [d['score']]
+            else:
+                articles_rating_info_dict[d['article_id']].append(d['score'])
+
+        return  articles_rating_info_dict
 
     def update_spam_status_of_ratings(self, ids, spam_status):
         updated = self.filter(id__in=ids).update(spam_status=spam_status)

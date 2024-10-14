@@ -1,5 +1,4 @@
 from typing import List
-
 from django.db import transaction
 
 from articles.spam_handlers.base import BaseProbableSpamHandler
@@ -26,7 +25,7 @@ class NormalDistProbableSpamHandler(BaseProbableSpamHandler):
         for rating in ratings:
             article = rating.article
             score_count = article_score_counts_dict[article.id].get(f'count_{rating.score}')
-            real_probability_of_score = score_count / article.rating_count
+            real_probability_of_score = score_count / (article.rating_count + score_count)
             normal_pdf = calculate_normal_distribution_pdf(
                 article.rating_average,
                 article.get_variance(),

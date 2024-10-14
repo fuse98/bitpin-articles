@@ -21,16 +21,14 @@ class SpamDetector:
 
     def get_spam_status_for_score(self, score: int, rating_count: int, mean: float, variance: float):
         spam_status = RatingSpamStatus.NOT_SPAM
-
-        if self.is_active and rating_count >= 1 and \
-            self.score_is_out_of_normal_bound(score, mean, variance):
+        if self.is_active and variance != 0 and \
+            rating_count >= self.decision_count_limit  and \
+                self.score_is_out_of_normal_bound(score, mean, variance):
             spam_status = RatingSpamStatus.PROBABLE_SPAM
 
         return spam_status
 
     def score_is_out_of_normal_bound(self, score: int, mean: float, variance: float):
-        print(mean)
-        print(variance)
         zscore = calculate_zscore(mean, variance, score)
         return zscore > config.SPAM_RATE_ZSCORE_BOUND or zscore < -1 * config.SPAM_RATE_ZSCORE_BOUND 
 

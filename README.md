@@ -41,6 +41,17 @@ python manage.py runserver
 celery -A core  worker -B
 ```
 
+## Runing Test
+
+1. Make sure db is runing
+2. Make sure environment has the requirments
+3. Make sure all configs are in place
+4. run this command:
+```
+cd src
+python manage.py test
+```
+
 ## APIs Overview
 
 ### Authentication
@@ -256,3 +267,5 @@ Now if this probability difference is greater than a limit(specified by **SPAM_R
 * Tuning parameters with real data.
 
 * Considering submission time of ratings as an statistical factor
+
+* Including spam detection for updates requires more memory and computational power. This current version of system does not support spam detection for updates. Instead updated ratings inherit the previouse spam status. Including updates is a trade of between increasing db load and more accuracy that resolving depends of the usages of the system.
